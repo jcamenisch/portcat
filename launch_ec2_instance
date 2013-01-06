@@ -1,0 +1,15 @@
+INSTANCES="$(ec2-describe-instances)"
+
+PORTCAT_INSTANCE=$(echo "$INSTANCES" | grep '^TAG\s.\+\sname\s\+portcat\b' | cut -f 3)
+
+if [ -n "$PORTCAT_INSTANCE" ]; then
+  echo "Existing instance found: $PORTCAT_INSTANCE"
+else
+  export OUTPUT=$(ec2-run-instances ami-d726abbe --user-data-file ~/projects/portcat/init_ami)
+  echo "$OUTPUT"
+  export PORTCAT_INSTANCE=$(echo "$OUTPUT" | grep INSTANCE | cut -f 2)
+
+  echo "Starting instance $PORTCAT_INSTANCE"
+
+  ec2-create-tags $PORTCAT_INSTANCE --tag name=portcat
+fi
